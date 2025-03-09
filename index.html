@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ST Programming Learning Platform</title>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/darcula.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        
+        .editor-container {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 15px;
+        }
+        
+        .editor-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: #343a40;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .action-button:hover {
+            background-color: #0069d9;
+        }
+        
+        .action-button.running {
+            background-color: #dc3545;
+        }
+        
+        .action-button.running:hover {
+            background-color: #c82333;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background-color: #252526;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: 0;
+        }
+        
+        .toolbar-snippets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .toolbar-button {
+            padding: 6px 12px;
+            background-color: #0e639c;
+            border: none;
+            border-radius: 3px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .toolbar-button:hover {
+            background-color: #1177bb;
+        }
+        
+        .editor-wrapper {
+            border: 1px solid #ccc;
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .CodeMirror {
+            height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .simulation-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .output-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .output-panel h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: #343a40;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+        
+        .output-display {
+            background-color: #212529;
+            color: #8df089;
+            padding: 15px;
+            border-radius: 4px;
+            height: 240px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .variable-monitor {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .monitor-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .variables-container {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        
+        .variable-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .variable-name {
+            flex: 0 0 40%;
+            font-family: monospace;
+            color: #006699;
+        }
+        
+        .variable-value {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .value-text {
+            font-family: monospace;
+            color: #212529;
+            padding: 3px 6px;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+        }
+        
+        .force-input {
+            padding: 5px 8px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+            width: 100px;
+        }
+        
+        .force-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .force-apply {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-card h3 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            margin: 0;
+            color: #6c757d;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .simulation-panels {
+                grid-template-columns: 1fr;
+            }
+            
+            .editor-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>ST Programming Learning Platform</h1>
+        </header>
+        
+        <main>
+            <h2>Interactive Structured Text (ST) Code Editor</h2>
+            <p>
+                This platform helps you learn ST programming for PLCs with an interactive code editor, syntax highlighting, 
+                and the ability to simulate your code directly in the browser.
+            </p>
+            
+            <div class="editor-container">
+                <div class="editor-header">
+                    <h2>Code Editor</h2>
+                    <div class="action-buttons">
+                        <button id="check-syntax" class="action-button">Check Syntax</button>
+                        <button id="run-simulation" class="action-button">Run Simulation</button>
+                    </div>
+                </div>
+                
+                <div class="toolbar">
+                    <div class="toolbar-snippets">
+                        <button class="toolbar-button" data-snippet="IF  THEN\n\t\nEND_IF;">IF</button>
+                        <button class="toolbar-button" data-snippet="FOR i := 0 TO 10 BY 1 DO\n\t\nEND_FOR;">FOR</button>
+                        <button class="toolbar-button" data-snippet="WHILE  DO\n\t\nEND_WHILE;">WHILE</button>
+                        <button class="toolbar-button" data-snippet="PROGRAM ProgramName\nVAR\n\t\nEND_VAR\n\n\nEND_PROGRAM">PROGRAM</button>
+                        <button class="toolbar-button" data-snippet="REPEAT\n\t\nUNTIL ;\nEND_REPEAT;">REPEAT</button>
+                        <button class="toolbar-button" data-snippet="CASE  OF\n\t1: ;\n\t2: ;\nELSE\n\t;\nEND_CASE;">CASE</button>
+                    </div>
+                </div>
+                
+                <div class="editor-wrapper">
+                    <textarea id="code-editor">PROGRAM HelloWorld
+VAR
+  Counter : INT := 0;
+  MaxCount : INT := 10;
+  Running : BOOL := TRUE;
+  Message : STRING := 'Hello, PLC World!';
+END_VAR
+
+WHILE Running DO
+  Counter := Counter + 1;
+  
+  IF Counter >= MaxCount THEN
+    Running := FALSE;
+  END_IF;
+END_WHILE;
+
+END_PROGRAM</textarea>
+                </div>
+                
+                <div class="simulation-panels">
+                    <div class="output-panel">
+                        <h3>Simulation Output</h3>
+                        <pre id="output-display" class="output-display"></pre>
+                    </div>
+                    
+                    <div class="variable-monitor">
+                        <div class="monitor-header">
+                            <h3>Variable Monitor</h3>
+                        </div>
+                        <div id="variables-container" class="variables-container">
+                            <!-- Variables will be added here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Syntax Highlighting</h3>
+                    <p>ST code with proper syntax highlighting for keywords, variables, and operators.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Code Completion</h3>
+                    <p>Intelligent suggestions for ST language constructs and functions.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Variable Monitoring</h3>
+                    <p>Watch variables change during simulation and force values for testing.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Learning Resources</h3>
+                    <p>Comprehensive documentation and tutorials for ST programming.</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>ST Programming Learning Platform &copy; 2023 | <a href="https://github.com/Harirrou/structured-text-editor" target="_blank">GitHub Repository</a></p>
+        </footer>
+    </div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/comment/comment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/selection/active-line.min.js"></script>
+    
+    <script>
+        // Define Structured Text mode for CodeMirror
+        CodeMirror.defineMode("structuredtext", function() {
+            const keywords = /^(IF|THEN|ELSE|ELSIF|END_IF|CASE|OF|END_CASE|FOR|TO|BY|DO|END_FOR|WHILE|END_WHILE|REPEAT|UNTIL|END_REPEAT|EXIT|CONTINUE|RETURN|PROGRAM|END_PROGRAM|FUNCTION|END_FUNCTION|FUNCTION_BLOCK|END_FUNCTION_BLOCK|METHOD|END_METHOD|INTERFACE|END_INTERFACE|VAR|VAR_INPUT|VAR_OUTPUT|VAR_IN_OUT|VAR_TEMP|VAR_GLOBAL|END_VAR|CONSTANT|RETAIN|PERSISTENT|AND|OR|XOR|NOT|MOD)$/i;
+            
+            const types = /^(BOOL|BYTE|WORD|DWORD|LWORD|SINT|INT|DINT|LINT|USINT|UINT|UDINT|ULINT|REAL|LREAL|TIME|TIME_OF_DAY|TOD|DATE|DATE_AND_TIME|DT|STRING|WSTRING|CHAR|WCHAR|ARRAY|STRUCT|END_STRUCT|POINTER|REF|TO|OF)$/i;
+            
+            const functions = /^(ABS|SQRT|LN|LOG|EXP|SIN|COS|TAN|ASIN|ACOS|ATAN|ATAN2|ADD|SUB|MUL|DIV|MOD|MOVE|EXPT|LEN|LEFT|RIGHT|MID|CONCAT|INSERT|DELETE|REPLACE|FIND|TRUNC|REAL_TO_INT|INT_TO_REAL|BOOL_TO_INT|INT_TO_BOOL|TON|TOF|TP|CTU|CTD|CTUD|R_TRIG|F_TRIG|SHL|SHR|ROL|ROR|AND|OR|XOR|NOT|SEL|MAX|MIN|LIMIT|MUX|ADR|SIZE)$/i;
+            
+            return {
+                token: function(stream, state) {
+                    if (stream.eatSpace()) return null;
+                    
+                    // Handle comments
+                    if (stream.match("//")) {
+                        stream.skipToEnd();
+                        return "comment";
+                    }
+                    
+                    if (stream.match("(*")) {
+                        state.commentLevel = 1;
+                        return "comment";
+                    }
+                    
+                    if (state.commentLevel > 0) {
+                        if (stream.match("*)")) {
+                            state.commentLevel--;
+                            return "comment";
+                        }
+                        if (stream.match("(*")) {
+                            state.commentLevel++;
+                            return "comment";
+                        }
+                        stream.next();
+                        return "comment";
+                    }
+                    
+                    // Handle strings
+                    if (stream.match("'")) {
+                        state.inString = true;
+                        return "string";
+                    }
+                    
+                    if (state.inString) {
+                        if (stream.match("'")) {
+                            state.inString = false;
+                            return "string";
+                        }
+                        stream.next();
+                        return "string";
+                    }
+                    
+                    // Handle numbers
+                    if (stream.match(/\d+(\.\d+)?([eE][+-]?\d+)?/)) {
+                        return "number";
+                    }
+                    
+                    // Handle identifiers and keywords
+                    if (stream.match(/[a-zA-Z_][a-zA-Z0-9_]*/)) {
+                        const word = stream.current().toUpperCase();
+                        if (keywords.test(word)) return "keyword";
+                        if (types.test(word)) return "type";
+                        if (functions.test(word)) return "builtin";
+                        return "variable";
+                    }
+                    
+                    // Handle operators and other symbols
+                    if (stream.match(/[:;,=><+\-*\/\(\)\[\]{}]/)) {
+                        return "operator";
+                    }
+                    
+                    stream.next();
+                    return null;
+                },
+                
+                startState: function() {
+                    return {
+                        commentLevel: 0,
+                        inString: false
+                    };
+                }
+            };
+        });
+        
+        // Global variables
+        let editor;
+        let isRunning = false;
+        let simulationStep = 0;
+        let simulationTimer = null;
+        let variables = [];
+        
+        // DOM elements
+        const outputDisplay = document.getElementById('output-display');
+        const variablesContainer = document.getElementById('variables-container');
+        const runSimulationButton = document.getElementById('run-simulation');
+        const checkSyntaxButton = document.getElementById('check-syntax');
+        const snippetButtons = document.querySelectorAll('.toolbar-button');
+        
+        // Initialize
+        function init() {
+            // Initialize CodeMirror
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+                mode: "structuredtext",
+                theme: "darcula",
+                lineNumbers: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                indentWithTabs: true,
+                styleActiveLine: true,
+                lineWrapping: true,
+                tabSize: 4,
+                autoCloseBrackets: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers"]
+            });
+            
+            // Add event listeners
+            runSimulationButton.addEventListener('click', toggleSimulation);
+            checkSyntaxButton.addEventListener('click', checkSyntax);
+            
+            // Add snippet buttons event listeners
+            snippetButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    insertSnippet(button.dataset.snippet);
+                });
+            });
+        }
+        
+        // Toggle simulation (start/stop)
+        function toggleSimulation() {
+            if (isRunning) {
+                stopSimulation();
+            } else {
+                startSimulation();
+            }
+        }
+        
+        // Start simulation
+        function startSimulation() {
+            outputDisplay.textContent = 'Simulation started...\n';
+            
+            try {
+                // Parse variables from code
+                variables = parseVariables(editor.getValue());
+                renderVariables();
+                
+                // Update button state
+                isRunning = true;
+                runSimulationButton.textContent = 'Stop Simulation';
+                runSimulationButton.classList.add('running');
+                
+                // Start simulation
+                simulationStep = 0;
+                runSimulationStep();
+            } catch (error) {
+                outputDisplay.textContent += `Error: ${error.message}\n`;
+            }
+        }
+        
+        // Stop simulation
+        function stopSimulation() {
+            clearTimeout(simulationTimer);
+            isRunning = false;
+            runSimulationButton.textContent = 'Run Simulation';
+            runSimulationButton.classList.remove('running');
+            outputDisplay.textContent += 'Simulation stopped by user\n';
+        }
+        
+        // Run a single simulation step
+        function runSimulationStep() {
+            if (!isRunning) return;
+            
+            if (simulationStep >= 10) {
+                outputDisplay.textContent += 'Program completed execution\n';
+                stopSimulation();
+                return;
+            }
+            
+            // Find Counter variable
+            const counterVar = variables.find(v => v.name === 'Counter');
+            if (counterVar) {
+                // Increment counter
+                counterVar.value += 1;
+                outputDisplay.textContent += `Counter increased to: ${counterVar.value}\n`;
+                
+                // Find MaxCount variable
+                const maxCountVar = variables.find(v => v.name === 'MaxCount');
+                
+                // Update Running based on Counter and MaxCount
+                if (maxCountVar && counterVar.value >= maxCountVar.value) {
+                    const runningVar = variables.find(v => v.name === 'Running');
+                    if (runningVar) {
+                        runningVar.value = false;
+                        outputDisplay.textContent += 'Running set to FALSE\n';
+                    }
+                }
+                
+                // Update variables display
+                renderVariables();
+            }
+            
+            simulationStep++;
+            
+            // Schedule next step
+            simulationTimer = setTimeout(runSimulationStep, 500);
+            
+            // Auto-scroll output to bottom
+            outputDisplay.scrollTop = outputDisplay.scrollHeight;
+        }
+        
+        // Parse variables from ST code
+        function parseVariables(stCode) {
+            const parsedVars = [];
+            
+            // Find VAR blocks
+            const varBlocks = stCode.split('VAR');
+            
+            for (let i = 1; i < varBlocks.length; i++) {
+                const blockContent = varBlocks[i];
+                const endVarIndex = blockContent.indexOf('END_VAR');
+                
+                if (endVarIndex > 0) {
+                    const varSection = blockContent.substring(0, endVarIndex);
+                    const lines = varSection.split('\n');
+                    
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (!trimmedLine || trimmedLine.startsWith('//')) continue;
+                        
+                        // Match variable declarations like: name : TYPE := value;
+                        const match = trimmedLine.match(/([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?::=\s*([^;]*))?;/);
+                        
+                        if (match) {
+                            const varName = match[1];
+                            const varType = match[2];
+                            const varInitValue = match[3] ? match[3].trim() : null;
+                            
+                            // Extract initial value based on type
+                            let value;
+                            
+                            if (varInitValue) {
+                                if (varType.toUpperCase() === 'BOOL') {
+                                    value = varInitValue.toUpperCase() === 'TRUE';
+                                } else if (varType.toUpperCase().includes('INT')) {
+                                    value = parseInt(varInitValue, 10) || 0;
+                                } else if (varType.toUpperCase().includes('REAL')) {
+                                    value = parseFloat(varInitValue) || 0;
+                                } else if (varType.toUpperCase().includes('STRING')) {
+                                    // Strip quotes
+                                    value = varInitValue.replace(/^['"]|['"]$/g, '');
+                                } else {
+                                    value = varInitValue;
+                                }
+                            } else {
+                                // Default values
+                                if (varType.toUpperCase() === 'BOOL') value = false;
+                                else if (varType.toUpperCase().includes('INT')) value = 0;
+                                else if (varType.toUpperCase().includes('REAL')) value = 0;
+                                else if (varType.toUpperCase().includes('STRING')) value = '';
+                                else value = null;
+                            }
+                            
+                            parsedVars.push({
+                                name: varName,
+                                type: varType,
+                                value: value
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return parsedVars;
+        }
+        
+        // Render variables in the variable monitor
+        function renderVariables() {
+            variablesContainer.innerHTML = '';
+            
+            if (variables.length === 0) {
+                variablesContainer.innerHTML = '<div class="no-variables">No variables available</div>';
+                return;
+            }
+            
+            for (const variable of variables) {
+                const varItem = document.createElement('div');
+                varItem.className = 'variable-item';
+                
+                const varName = document.createElement('div');
+                varName.className = 'variable-name';
+                varName.textContent = variable.name;
+                
+                const varValue = document.createElement('div');
+                varValue.className = 'variable-value';
+                
+                const valueText = document.createElement('span');
+                valueText.className = 'value-text';
+                valueText.textContent = formatValue(variable.value, variable.type);
+                
+                const forceButton = document.createElement('button');
+                forceButton.className = 'force-button';
+                forceButton.textContent = 'Force';
+                forceButton.addEventListener('click', () => {
+                    showForceInput(varItem, variable);
+                });
+                
+                varValue.appendChild(valueText);
+                varValue.appendChild(forceButton);
+                
+                varItem.appendChild(varName);
+                varItem.appendChild(varValue);
+                
+                variablesContainer.appendChild(varItem);
+            }
+        }
+        
+        // Show input to force a variable value
+        function showForceInput(varItem, variable) {
+            const varValue = varItem.querySelector('.variable-value');
+            varValue.innerHTML = '';
+            
+            const input = document.createElement('input');
+            input.className = 'force-input';
+            input.value = formatValue(variable.value, variable.type);
+            
+            if (variable.type.toUpperCase() === 'BOOL') {
+                input.type = 'checkbox';
+                input.checked = variable.value;
+            }
+            
+            const applyButton = document.createElement('button');
+            applyButton.className = 'force-apply';
+            applyButton.textContent = 'Apply';
+            applyButton.addEventListener('click', () => {
+                let newValue;
+                
+                if (variable.type.toUpperCase() === 'BOOL') {
+                    newValue = input.checked;
+                } else if (variable.type.toUpperCase().includes('INT')) {
+                    newValue = parseInt(input.value, 10) || 0;
+                } else if (variable.type.toUpperCase().includes('REAL')) {
+                    newValue = parseFloat(input.value) || 0;
+                } else {
+                    newValue = input.value;
+                }
+                
+                // Update variable
+                variable.value = newValue;
+                outputDisplay.textContent += `Variable "${variable.name}" forced to ${formatValue(newValue, variable.type)}\n`;
+                outputDisplay.scrollTop = outputDisplay.scrollHeight;
+                
+                // Re-render all variables
+                renderVariables();
+            });
+            
+            varValue.appendChild(input);
+            varValue.appendChild(applyButton);
+        }
+        
+        // Format value based on type
+        function formatValue(value, type) {
+            if (value === undefined || value === null) {
+                return 'undefined';
+            }
+            
+            if (type.toUpperCase() === 'BOOL') {
+                return value ? 'TRUE' : 'FALSE';
+            }
+            
+            return value.toString();
+        }
+        
+        // Check syntax
+        function checkSyntax() {
+            try {
+                const parsedVars = parseVariables(editor.getValue());
+                if (parsedVars.length > 0) {
+                    outputDisplay.textContent = `Syntax check passed. Found ${parsedVars.length} variables.`;
+                } else {
+                    outputDisplay.textContent = 'Syntax check passed. No variables found.';
+                }
+            } catch (error) {
+                outputDisplay.textContent = `Syntax error: ${error.message}`;
+            }
+        }
+        
+        // Insert a code snippet at cursor position
+        function insertSnippet(snippet) {
+            const cursor = editor.getCursor();
+            editor.replaceRange(snippet, cursor);
+            editor.focus();
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
